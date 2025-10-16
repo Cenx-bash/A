@@ -1,0 +1,37 @@
+<#
+.SYNOPSIS
+  Find-LiveHosts.ps1 - simple ping sweep to discover live hosts on a subnet.
+.NOTES
+  Use this only on networks you own or have permission to scan.
+#>
+
+param(
+  [Parameter(Mandatory=$false)]
+  [string]$Network = "192.168.1",
+
+  [Parameter(Mandatory=$false)]
+  [int]$From = 1,
+
+  [Parameter(Mandatory=$false)]
+  [int]$To = 254,
+
+  [Parameter(Mandatory=$false)]
+  [int]$TimeoutMs = 500
+)
+
+$live = [System.Collections.Generic.List[string]]::new()
+
+for ($i = $From; $i -le $To; $i++) {
+  $ip = "$Network.$i"
+  try {
+    $isAlive = Test-Connection -ComputerName $ip -Count 1 -Quiet -TimeoutMilliseconds $TimeoutMs
+    if ($isAlive) {
+      $live.Add($ip)
+      Write-Output "Alive: $ip"
+    }
+  } catch {
+    # ignore unreachable errors silently to keep output clean
+  }
+}
+
+Write-Output "Found $($live.Count) live host(s)."
